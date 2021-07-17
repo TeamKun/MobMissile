@@ -1,0 +1,4 @@
+name: MobMissile
+version: ${project.version}
+main: net.kunmc.lab.mobmissile.MobMissile
+api-version: 1.16

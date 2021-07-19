@@ -27,6 +27,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
     private BukkitTask mainTask = null;
     private double range = 50.0;
     private double speed = 1.0;
+    private float power = 1.0F;
 
     @Override
     public void onEnable() {
@@ -100,6 +101,14 @@ public final class MobMissile extends JavaPlugin implements Listener {
                                     sender.sendMessage(ChatColor.RED + "不正な値です.double値を入力してください.");
                                 }
                                 break;
+                            case "power":
+                                try {
+                                    power = Float.parseFloat(args[3]);
+                                    sender.sendMessage(ChatColor.GREEN + "powerの値を" + power + "に設定しました.");
+                                } catch (NumberFormatException e) {
+                                    sender.sendMessage(ChatColor.RED + "不正な値です.double値を入力してください.");
+                                }
+                                break;
                             default:
                                 sender.sendMessage(ChatColor.RED + "不明な設定項目です.");
                         }
@@ -127,7 +136,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
         }
 
         if (args.length == 3 && args[1].equals("set")) {
-            list = Arrays.asList("range", "speed");
+            list = Arrays.asList("range", "speed", "power");
         }
 
         if (args.length == 4 && args[1].equals("set")) {
@@ -226,7 +235,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        currentLocation.createExplosion(1.0F);
+                        currentLocation.createExplosion(power);
                     }
                 }.runTask(INSTANCE);
                 missile.remove();

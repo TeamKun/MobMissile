@@ -77,7 +77,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
 
                 switch (args[1]) {
                     case "show":
-                        sender.sendMessage(String.format(ChatColor.GREEN + "range=%f, speed=%f", range, speed));
+                        sender.sendMessage(String.format(ChatColor.GREEN + "range=%f, speed=%f, power=%f", range, speed, power));
                         break;
                     case "set":
                         if (args.length < 4) {

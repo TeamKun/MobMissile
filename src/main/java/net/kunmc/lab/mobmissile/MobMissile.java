@@ -196,6 +196,12 @@ public final class MobMissile extends JavaPlugin implements Listener {
             Location currentLocation = missile.getLocation();
             Location targetLocation = target.getEyeLocation();
 
+            if (!currentLocation.getWorld().equals(targetLocation.getWorld())) {
+                missile.removeMetadata(metadataKey, INSTANCE);
+                this.cancel();
+                return;
+            }
+
             if (count < 25 / speed) {
                 missile.setVelocity(new Vector(0.0, speed, 0.0));
                 count++;

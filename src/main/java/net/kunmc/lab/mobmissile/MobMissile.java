@@ -1,56 +1,37 @@
 package net.kunmc.lab.mobmissile;
 
 import com.destroystokyo.paper.ParticleBuilder;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Particle;
+import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public final class MobMissile extends JavaPlugin {
+public final class MobMissile extends JavaPlugin implements Listener {
     public static JavaPlugin INSTANCE;
-    private static final String metadataKey = "firedMob";
+    private final String metadataKey = "firedMob";
+    private BukkitTask mainTask = null;
+    private double range = 50.0;
+    private double speed = 1.0;
 
     @Override
     public void onEnable() {
         INSTANCE = this;
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                List<Player> playerList = new ArrayList<>(Bukkit.getOnlinePlayers());
-                Collections.shuffle(playerList);
-                playerList.forEach(p -> {
-                    if (p.getGameMode().equals(GameMode.CREATIVE) || p.getGameMode().equals(GameMode.SPECTATOR)) {
-                        return;
-                    }
-
-                    Bukkit.selectEntities(p, "@e[type=!player,distance=1..50]").forEach(entity -> {
-                        if (entity.hasMetadata(metadataKey)) {
-                            return;
-                        }
-
-                        if (!(entity instanceof LivingEntity)) {
-                            return;
-                        }
-
-                        if (((LivingEntity) entity).hasLineOfSight(p)) {
-                            entity.setMetadata(metadataKey, new FixedMetadataValue(INSTANCE, null));
-                            new FiringTask(((LivingEntity) entity), p).runTaskTimerAsynchronously(INSTANCE, 0, 1);
-                        }
-                    });
-                });
-            }
-        }.runTaskTimer(INSTANCE, 0, 10);
+        getServer().getPluginManager().registerEvents(this, this);
     }
 
     @Override
@@ -58,7 +39,133 @@ public final class MobMissile extends JavaPlugin {
         Bukkit.selectEntities(Bukkit.getConsoleSender(), "@e").forEach(e -> e.removeMetadata(metadataKey, INSTANCE));
     }
 
-    private static class FiringTask extends BukkitRunnable {
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (args.length < 1) {
+            return false;
+        }
+
+        switch (args[0]) {
+            case "start":
+                if (mainTask != null) {
+                    sender.sendMessage(ChatColor.RED + "MobMissileは既に実行されています.");
+                    break;
+                }
+
+                mainTask = new MainTask().runTaskTimer(INSTANCE, 0, 10);
+                sender.sendMessage(ChatColor.GREEN + "MobMissileを開始しました.");
+                break;
+            case "stop":
+                if (mainTask == null) {
+                    sender.sendMessage(ChatColor.RED + "MobMissileは実行されていません.");
+                    break;
+                }
+
+                mainTask.cancel();
+                mainTask = null;
+                sender.sendMessage(ChatColor.GREEN + "MobMissileを停止しました.");
+                break;
+            case "config":
+                if (args.length < 2) {
+                    sender.sendMessage(ChatColor.RED + "usage:\n" +
+                            "/mobmissile config show \n" +
+                            "/mobmissile config set <item> <value>");
+                    break;
+                }
+
+                switch (args[1]) {
+                    case "show":
+                        sender.sendMessage(String.format(ChatColor.GREEN + "range=%f, speed=%f", range, speed));
+                        break;
+                    case "set":
+                        if (args.length < 4) {
+                            sender.sendMessage(ChatColor.RED + "usage: /mobmissile config set <item> <value>");
+                            break;
+                        }
+
+                        switch (args[2]) {
+                            case "range":
+                                try {
+                                    range = Double.parseDouble(args[3]);
+                                    sender.sendMessage(ChatColor.GREEN + "rangeの値を" + range + "に設定しました.");
+                                } catch (NumberFormatException e) {
+                                    sender.sendMessage(ChatColor.RED + "不正な値です.double値を入力してください.");
+                                }
+                                break;
+                            case "speed":
+                                try {
+                                    speed = Double.parseDouble(args[3]);
+                                    sender.sendMessage(ChatColor.GREEN + "speedの値を" + speed + "に設定しました.");
+                                } catch (NumberFormatException e) {
+                                    sender.sendMessage(ChatColor.RED + "不正な値です.double値を入力してください.");
+                                }
+                                break;
+                            default:
+                                sender.sendMessage(ChatColor.RED + "不明な設定項目です.");
+                        }
+                        break;
+                    default:
+                        sender.sendMessage(ChatColor.RED + "不明なコマンドです.");
+                }
+                break;
+            default:
+                sender.sendMessage(ChatColor.RED + "不明なコマンドです.");
+        }
+
+        return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
+        List<String> list = Collections.emptyList();
+        if (args.length == 1) {
+            list = Arrays.asList("start", "stop", "config");
+        }
+
+        if (args.length == 2 && args[0].equals("config")) {
+            list = Arrays.asList("show", "set");
+        }
+
+        if (args.length == 3 && args[1].equals("set")) {
+            list = Arrays.asList("range", "speed");
+        }
+
+        if (args.length == 4 && args[1].equals("set")) {
+            list = Collections.singletonList("<DoubleValue>");
+        }
+
+        return list.stream().filter(x -> x.startsWith(args[args.length - 1])).collect(Collectors.toList());
+    }
+
+    private class MainTask extends BukkitRunnable {
+        @Override
+        public void run() {
+            List<Player> playerList = new ArrayList<>(Bukkit.getOnlinePlayers());
+            Collections.shuffle(playerList);
+            playerList.forEach(p -> {
+                if (p.getGameMode().equals(GameMode.CREATIVE) || p.getGameMode().equals(GameMode.SPECTATOR)) {
+                    return;
+                }
+
+                Bukkit.selectEntities(p, String.format("@e[type=!player,distance=1..%f]", range)).forEach(entity -> {
+                    if (entity.hasMetadata(metadataKey)) {
+                        return;
+                    }
+
+                    if (!(entity instanceof LivingEntity)) {
+                        return;
+                    }
+
+                    if (((LivingEntity) entity).hasLineOfSight(p)) {
+                        entity.setMetadata(metadataKey, new FixedMetadataValue(INSTANCE, null));
+                        new FiringTask(((LivingEntity) entity), p).runTaskTimerAsynchronously(INSTANCE, 0, 0);
+                    }
+                });
+            });
+        }
+    }
+
+    private class FiringTask extends BukkitRunnable {
         LivingEntity missile;
         LivingEntity target;
         Location launchPoint;
@@ -89,12 +196,12 @@ public final class MobMissile extends JavaPlugin {
             Location currentLocation = missile.getLocation();
             Location targetLocation = target.getEyeLocation();
 
-            if (count < 25) {
-                missile.setVelocity(new Vector(0.0, 1.0, 0.0));
+            if (count < 25 / speed) {
+                missile.setVelocity(new Vector(0.0, speed, 0.0));
                 count++;
             } else {
                 Vector vector = targetLocation.clone().subtract(currentLocation).toVector();
-                vector = vector.multiply(1.0 / vector.length());
+                vector = vector.multiply(speed / vector.length());
                 missile.setVelocity(vector);
             }
 
@@ -109,7 +216,7 @@ public final class MobMissile extends JavaPlugin {
                 }
             }.runTaskLater(INSTANCE, 1);
 
-            if (currentLocation.distance(targetLocation) < 0.5) {
+            if (currentLocation.distance(targetLocation) < speed * 0.5) {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -119,6 +226,17 @@ public final class MobMissile extends JavaPlugin {
                 missile.remove();
                 this.cancel();
             }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamaged(EntityDamageEvent e) {
+        if (!e.getEntity().hasMetadata(metadataKey)) {
+            return;
+        }
+
+        if (e.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
+            e.setCancelled(true);
         }
     }
 }

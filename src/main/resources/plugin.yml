@@ -2,3 +2,11 @@ name: MobMissile
 version: ${project.version}
 main: net.kunmc.lab.mobmissile.MobMissile
 api-version: 1.16
+commands:
+  mobmissile:
+    usage: |-
+      /mobmissile start
+      /mobmissile stop
+      /mobmissile config show
+      /mobmissile config set <item> <value>
+    permission: op

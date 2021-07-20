@@ -12,6 +12,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -22,15 +24,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public final class MobMissile extends JavaPlugin implements Listener {
     public static JavaPlugin INSTANCE;
     private final String metadataKey = "firedMob";
     private BukkitTask mainTask = null;
+    private BukkitTask giveSnowballTask = null;
     private double range = 50.0;
     private double speed = 0.5;
     private float power = 1.0F;
+    private boolean shouldGiveSnowball = true;
+    private int giveSnowballInterval = 20 * 5;
 
     @Override
     public void onEnable() {
@@ -57,6 +63,8 @@ public final class MobMissile extends JavaPlugin implements Listener {
                 }
 
                 mainTask = new MainTask().runTaskTimer(INSTANCE, 0, 10);
+                giveSnowballTask = new GiveSnowballTask().runTaskTimerAsynchronously(INSTANCE, 0, 1);
+
                 sender.sendMessage(ChatColor.GREEN + "MobMissileを開始しました.");
                 break;
             case "stop":
@@ -66,7 +74,10 @@ public final class MobMissile extends JavaPlugin implements Listener {
                 }
 
                 mainTask.cancel();
+                giveSnowballTask.cancel();
                 mainTask = null;
+                giveSnowballTask = null;
+
                 sender.sendMessage(ChatColor.GREEN + "MobMissileを停止しました.");
                 break;
             case "config":
@@ -112,6 +123,22 @@ public final class MobMissile extends JavaPlugin implements Listener {
                                     sender.sendMessage(ChatColor.RED + "不正な値です.double値を入力してください.");
                                 }
                                 break;
+                            case "shouldGiveSnowball":
+                                try {
+                                    shouldGiveSnowball = Boolean.parseBoolean(args[3]);
+                                    sender.sendMessage(ChatColor.GREEN + "shouldGiveSnowballの値を" + shouldGiveSnowball + "に設定しました.");
+                                } catch (Exception e) {
+                                    sender.sendMessage(ChatColor.RED + "不正な値です.boolean値を入力してください.");
+                                }
+                                break;
+                            case "giveSnowballInterval":
+                                try {
+                                    giveSnowballInterval = Integer.parseInt(args[3]);
+                                    sender.sendMessage(ChatColor.GREEN + "giveSnowballIntervalの値を" + giveSnowballInterval + "に設定しました.");
+                                } catch (NumberFormatException e) {
+                                    sender.sendMessage(ChatColor.RED + "不正な値です.int値を入力してください.");
+                                }
+                                break;
                             default:
                                 sender.sendMessage(ChatColor.RED + "不明な設定項目です.");
                         }
@@ -139,11 +166,11 @@ public final class MobMissile extends JavaPlugin implements Listener {
         }
 
         if (args.length == 3 && args[1].equals("set")) {
-            list = Arrays.asList("range", "speed", "power");
+            list = Arrays.asList("range", "speed", "power", "shouldGiveSnowball", "giveSnowballInterval");
         }
 
         if (args.length == 4 && args[1].equals("set")) {
-            list = Collections.singletonList("<DoubleValue>");
+            list = Collections.singletonList("<value>");
         }
 
         return list.stream().filter(x -> x.startsWith(args[args.length - 1])).collect(Collectors.toList());
@@ -247,6 +274,37 @@ public final class MobMissile extends JavaPlugin implements Listener {
                     this.cancel();
                 }
             }
+        }
+    }
+
+    private class GiveSnowballTask extends BukkitRunnable {
+        int count;
+
+        @Override
+        public void run() {
+            if (!shouldGiveSnowball) {
+                count = 0;
+                return;
+            }
+
+            if (count < giveSnowballInterval) {
+                count++;
+                return;
+            }
+            count = 0;
+
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                Inventory inventory = p.getInventory();
+                AtomicInteger snowballAmount = new AtomicInteger();
+                inventory.all(Material.SNOWBALL).values().forEach(item -> {
+                    snowballAmount.getAndAdd(item.getAmount());
+                });
+                if (snowballAmount.get() < 16) {
+                    ItemStack snowball = new ItemStack(Material.SNOWBALL);
+                    snowball.setAmount(1);
+                    inventory.addItem(snowball);
+                }
+            });
         }
     }
 

@@ -4,12 +4,14 @@ import com.destroystokyo.paper.ParticleBuilder;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Wither;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -232,7 +234,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                 }
             }.runTaskLater(INSTANCE, 1);
 
-            if (currentLocation.distance(targetLocation) < speed * 0.5) {
+            if (currentLocation.distance(targetLocation) < speed * 1) {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -257,5 +259,20 @@ public final class MobMissile extends JavaPlugin implements Listener {
         if (e.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
             e.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onSnowballHit(ProjectileHitEvent e) {
+        Entity entity = e.getHitEntity();
+        if (entity == null) {
+            return;
+        }
+
+        if (!entity.hasMetadata(metadataKey)) {
+            return;
+        }
+
+        entity.getLocation().createExplosion(power);
+        entity.remove();
     }
 }

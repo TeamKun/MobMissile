@@ -295,6 +295,10 @@ public final class MobMissile extends JavaPlugin implements Listener {
             count = 0;
 
             Bukkit.getOnlinePlayers().forEach(p -> {
+                if (p.getGameMode().equals(GameMode.CREATIVE) || p.getGameMode().equals(GameMode.SPECTATOR)) {
+                    return;
+                }
+
                 Inventory inventory = p.getInventory();
                 AtomicInteger snowballAmount = new AtomicInteger();
                 inventory.all(Material.SNOWBALL).values().forEach(item -> {

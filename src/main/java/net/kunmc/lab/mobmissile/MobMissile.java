@@ -29,7 +29,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
     private final String metadataKey = "firedMob";
     private BukkitTask mainTask = null;
     private double range = 50.0;
-    private double speed = 1.0;
+    private double speed = 0.5;
     private float power = 1.0F;
 
     @Override

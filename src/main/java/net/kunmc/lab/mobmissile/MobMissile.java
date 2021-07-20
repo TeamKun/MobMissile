@@ -4,10 +4,7 @@ import com.destroystokyo.paper.ParticleBuilder;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Wither;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -195,6 +192,10 @@ public final class MobMissile extends JavaPlugin implements Listener {
                         return;
                     }
 
+                    if (entity instanceof EnderDragon) {
+                        return;
+                    }
+
                     if (((LivingEntity) entity).hasLineOfSight(p)) {
                         entity.setMetadata(metadataKey, new FixedMetadataValue(INSTANCE, null));
                         new FiringTask(((LivingEntity) entity), p).runTaskTimerAsynchronously(INSTANCE, 0, 0);
@@ -331,6 +332,9 @@ public final class MobMissile extends JavaPlugin implements Listener {
         }
 
         entity.getLocation().createExplosion(power);
-        entity.remove();
+
+        if (!(entity instanceof Wither)) {
+            entity.remove();
+        }
     }
 }

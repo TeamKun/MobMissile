@@ -13,6 +13,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -266,7 +268,8 @@ public final class MobMissile extends JavaPlugin implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        currentLocation.createExplosion(power);
+                        currentLocation.createExplosion(0.0F);
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 0, true, true));
                     }
                 }.runTask(INSTANCE);
 
@@ -274,7 +277,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            missile.setHealth(0.0F);
+                            missile.remove();
                         }
                     }.runTask(INSTANCE);
                     this.cancel();
@@ -340,7 +343,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
             return;
         }
 
-        entity.getLocation().createExplosion(power);
+        entity.getLocation().createExplosion(0.0F);
 
         if (!(entity instanceof Wither)) {
             entity.remove();

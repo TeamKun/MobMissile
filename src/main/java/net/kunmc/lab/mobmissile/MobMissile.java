@@ -13,6 +13,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -31,7 +33,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
     private BukkitTask giveSnowballTask = null;
     private double range = 50.0;
     private double speed = 0.5;
-    private float power = 3.0F;
+    private float power = 0.0F;
     private boolean shouldGiveSnowball = true;
     private int giveSnowballInterval = 20 * 5;
 
@@ -267,6 +269,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                     @Override
                     public void run() {
                         currentLocation.createExplosion(power);
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 0));
                     }
                 }.runTask(INSTANCE);
 
@@ -274,7 +277,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            missile.setHealth(0.0F);
+                            missile.remove();
                         }
                     }.runTask(INSTANCE);
                     this.cancel();

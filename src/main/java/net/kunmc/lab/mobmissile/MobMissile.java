@@ -271,7 +271,12 @@ public final class MobMissile extends JavaPlugin implements Listener {
                 }.runTask(INSTANCE);
 
                 if (!(missile instanceof Wither)) {
-                    missile.remove();
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            missile.setHealth(0.0F);
+                        }
+                    }.runTask(INSTANCE);
                     this.cancel();
                 }
             }

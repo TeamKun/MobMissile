@@ -1,6 +1,5 @@
 package net.kunmc.lab.mobmissile;
 
-import com.destroystokyo.paper.ParticleBuilder;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -246,23 +245,12 @@ public final class MobMissile extends JavaPlugin implements Listener {
 
             if (count < 25 / speed) {
                 missile.setVelocity(new Vector(0.0, speed, 0.0));
-                count++;
+                count += 2;
             } else {
                 Vector vector = targetLocation.clone().subtract(currentLocation).toVector();
                 vector = vector.multiply(speed / vector.length());
                 missile.setVelocity(vector);
             }
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    new ParticleBuilder(Particle.SMOKE_LARGE)
-                            .count(4)
-                            .extra(0.03)
-                            .location(currentLocation)
-                            .spawn();
-                }
-            }.runTaskLater(INSTANCE, 1);
 
             if (currentLocation.distance(targetLocation) < speed * 1) {
                 new BukkitRunnable() {

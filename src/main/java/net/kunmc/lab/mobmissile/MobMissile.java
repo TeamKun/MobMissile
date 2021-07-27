@@ -31,7 +31,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
     private BukkitTask mainTask = null;
     private BukkitTask giveSnowballTask = null;
     private double range = 50.0;
-    private double speed = 0.5;
+    private double speed = 0.6;
     private float power = 0.0F;
     private boolean shouldGiveSnowball = true;
     private int giveSnowballInterval = 20 * 5;

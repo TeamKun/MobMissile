@@ -269,7 +269,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                     @Override
                     public void run() {
                         currentLocation.createExplosion(power);
-                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 0));
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 1));
                     }
                 }.runTask(INSTANCE);
 

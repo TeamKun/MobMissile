@@ -33,6 +33,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
     private double range = 50.0;
     private double speed = 0.6;
     private float power = 0.0F;
+    private int effectDuration = 3;
     private boolean shouldGiveSnowball = true;
     private int giveSnowballInterval = 5;
 
@@ -137,6 +138,14 @@ public final class MobMissile extends JavaPlugin implements Listener {
                                     sender.sendMessage(ChatColor.RED + "不正な値です.int値を入力してください.");
                                 }
                                 break;
+                            case "effectDuration":
+                                try {
+                                    effectDuration = Integer.parseInt(args[3]);
+                                    sender.sendMessage(ChatColor.GREEN + "effectDurationの値を" + effectDuration + "に設定しました.");
+                                } catch (Exception e) {
+                                    sender.sendMessage(ChatColor.RED + "不正な値です.int値を入力してください.");
+                                }
+                                break;
                             default:
                                 sender.sendMessage(ChatColor.RED + "不明な設定項目です.");
                         }
@@ -164,7 +173,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
         }
 
         if (args.length == 3 && args[1].equals("set")) {
-            list = Arrays.asList("range", "speed", "power", "shouldGiveSnowball", "giveSnowballInterval");
+            list = Arrays.asList("range", "speed", "power", "shouldGiveSnowball", "giveSnowballInterval", "effectDuration");
         }
 
         if (args.length == 4 && args[1].equals("set")) {
@@ -257,7 +266,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
                     @Override
                     public void run() {
                         currentLocation.createExplosion(power);
-                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 1));
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, effectDuration * 20, 1));
                     }
                 }.runTask(INSTANCE);
 

@@ -34,7 +34,7 @@ public final class MobMissile extends JavaPlugin implements Listener {
     private double speed = 0.6;
     private float power = 0.0F;
     private boolean shouldGiveSnowball = true;
-    private int giveSnowballInterval = 20 * 5;
+    private int giveSnowballInterval = 5;
 
     @Override
     public void onEnable() {
